@@ -1,0 +1,95 @@
+WinMain.hに追加
+
+#include<windows.h>
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+
+//ウィンドウ--------------------------------------------------------------------
+LPCWSTR	WindowTitle = L"loveDX11";
+int ClientWidth = 1280;
+int ClientHeight = 720;
+int DisplayWidth = GetSystemMetrics(SM_CXSCREEN);//幅測定
+int DisplayHeight = GetSystemMetrics(SM_CYSCREEN);//高さ測定
+int ClientLeft = (DisplayWidth - ClientWidth) / 2;//中央表示
+int ClientTop = (DisplayHeight - ClientHeight) / 2;//中央表示
+HBRUSH HBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);//背景色
+#if 1 
+DWORD WindowStyle = WS_OVERLAPPEDWINDOW;//ウィンドウ枠あり
+#else
+DWORD WindowStyle = WS_POPUP;//Alt + F4で閉じる
+#endif
+HWND HWnd;//ウィンドウハンドル
+
+
+WinMain.cppに追加
+
+#include"WinMain.h"
+
+int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _In_ INT)
+{
+    //ウィンドウ
+    {
+        //ウィンドウクラス登録
+        {
+            WNDCLASSEX windowClass = {};
+            windowClass.lpszClassName = L"GAME_WINDOW";
+            windowClass.hbrBackground = HBackground;
+            windowClass.hInstance = hInstance;
+            windowClass.lpfnWndProc = WndProc;
+            windowClass.hIcon = LoadIcon(NULL, IDC_ICON);
+            windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+            windowClass.cbSize = sizeof(WNDCLASSEX);
+            RegisterClassEx(&windowClass);
+        }
+        //ウィンドウをつくって表示
+        {
+            //まず、表示位置、ウィンドウの大きさ調整
+            RECT windowRect = { 0, 0, ClientWidth, ClientHeight };
+            AdjustWindowRect(&windowRect, WindowStyle, FALSE);
+            int windowLeft = ClientLeft + windowRect.left;
+            int windowTop = ClientTop + windowRect.top;
+            int windowWidth = windowRect.right - windowRect.left;
+            int windowHeight = windowRect.bottom - windowRect.top;
+            //つぎに、ウィンドウをつくる
+            HWnd = CreateWindowEx(
+                NULL,//拡張スタイルなし
+                L"GAME_WINDOW",
+                WindowTitle,
+                WindowStyle,
+                windowLeft,
+                windowTop,
+                windowWidth,
+                windowHeight,
+                NULL,//親ウィンドウなし
+                NULL,//メニューなし
+                hInstance,
+                NULL//複数ウィンドウなし
+            );		
+            //ウィンドウ表示
+            ShowWindow(HWnd, SW_SHOW);
+        }
+    }
+    //メインループ
+    while (true)
+    {
+        //ウィンドウメッセージの取得、送出
+        {
+            MSG msg = { 0 };
+            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+                if (msg.message == WM_QUIT) break;
+                DispatchMessage(&msg);
+                continue;
+            }
+        }
+    }
+}
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    switch (msg) {
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    default:
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+}
