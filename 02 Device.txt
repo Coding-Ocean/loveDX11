@@ -4,8 +4,8 @@ WinMain.h***********************************************************************
 #include<cassert>
 
 //デバイス、コンテキスト-------------------------------------------------------
-ID3D11Device*               Device;
-ID3D11DeviceContext*        Context;
+ID3D11Device*               Device;//バッファやバッファビュー、パイプラインステートをつくる関数をもつ
+ID3D11DeviceContext*        Context;//バッファビューやパイプラインステートをパイプラインにセットする関数をもつ
 ID3D11Debug*                Debug;
 HRESULT Hr;
 
