@@ -1,0 +1,85 @@
+ヘッダ**************************************************************************
+#pragma comment(lib,"dxgi.lib")
+#include<dxgi1_6.h>
+#include<cmath>
+//リソース-------------------------------------------------------------------
+IDXGISwapChain4*            SwapChain;
+ID3D11RenderTargetView*     BackBufferView;
+
+初期化**************************************************************************
+    //リソース
+    {
+        //スワップチェインをつくる(バックバッファを含んでいる)
+        {
+            //DXGIファクトリをつくる
+            IDXGIFactory4* dxgiFactory;
+            Hr = CreateDXGIFactory1(
+                __uuidof(IDXGIFactory4),
+                reinterpret_cast<void**>(&dxgiFactory));
+            assert(SUCCEEDED(Hr));
+
+            //スワップチェインをつくる
+            DXGI_SWAP_CHAIN_DESC desc = {};
+            desc.BufferCount = 1;
+            desc.BufferDesc.Width = ClientWidth;
+            desc.BufferDesc.Height = ClientHeight;
+            desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            desc.BufferDesc.RefreshRate.Numerator = 60;
+            desc.BufferDesc.RefreshRate.Denominator = 1;
+            desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            desc.OutputWindow = HWnd;
+            desc.SampleDesc.Count = 1;
+            desc.SampleDesc.Quality = 0;
+            desc.Windowed = TRUE;
+            IDXGISwapChain* swapChain;
+            Hr = dxgiFactory->CreateSwapChain(Device, &desc, &swapChain);
+            assert(SUCCEEDED(Hr));
+
+            //IDXGISwapChain4インターフェイスをサポートしているか尋ねる
+            Hr = swapChain->QueryInterface(
+                __uuidof(IDXGISwapChain4),
+                reinterpret_cast<void**>(&SwapChain));
+            assert(SUCCEEDED(Hr));
+
+            swapChain->Release();
+            dxgiFactory->Release();
+        }
+        //バックバッファのビューをつくる
+        {
+            //スワップチェインからバックバッファを取得
+            ID3D11Texture2D* backBuffer;
+            Hr = SwapChain->GetBuffer(0, 
+                __uuidof(ID3D11Texture2D),
+                reinterpret_cast<void**>(&backBuffer));
+            assert(SUCCEEDED(Hr));
+
+            //バックバッファのビューを作成
+            Hr = Device->CreateRenderTargetView(backBuffer, nullptr, &BackBufferView);
+            assert(SUCCEEDED(Hr));
+
+            backBuffer->Release();
+        }
+    }
+
+メインループ*********************************************************************
+        //バックバッファのクリア
+        {
+            //バックバッファをレンダーターゲットに設定
+            Context->OMSetRenderTargets(1, &BackBufferView, nullptr);
+            //レンダーターゲットビューを指定した色でクリア
+            static float radian = 0.0f;
+            float r = cos(radian) * 0.5f + 0.5f;
+            radian += 0.01f;
+            FLOAT clearColor[4] = { r, 0.25f, 0.5f, 1.0f };
+            Context->ClearRenderTargetView(BackBufferView, clearColor);
+        }
+
+        //バックバッファの表示
+        {
+            SwapChain->Present(1, 0);
+        }
+
+解放****************************************************************************
+        BackBufferView->Release();
+        SwapChain->Release();
+
