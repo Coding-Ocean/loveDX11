@@ -1,0 +1,56 @@
+WinMain.h***********************************************************************
+#pragma comment(lib,"d3d11.lib")
+#include<d3d11.h>
+#include<cassert>
+
+//デバイス、コンテキスト-------------------------------------------------------
+ID3D11Device*               Device;
+ID3D11DeviceContext*        Context;
+ID3D11Debug*                Debug;
+HRESULT Hr;
+
+
+WinMain.cpp 初期化**************************************************************
+    //デバイス、コンテキスト
+    {
+        UINT creationFlags = 0;
+#ifdef _DEBUG
+        creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+        D3D_FEATURE_LEVEL featureLevels[] = {
+            D3D_FEATURE_LEVEL_11_1,
+            D3D_FEATURE_LEVEL_11_0,
+        };
+        UINT numFeatureLevels = ARRAYSIZE(featureLevels);
+        Hr = D3D11CreateDevice(
+            nullptr,
+            D3D_DRIVER_TYPE_HARDWARE,
+            nullptr,
+            creationFlags,
+            featureLevels,
+            numFeatureLevels,
+            D3D11_SDK_VERSION,
+            &Device,
+            nullptr,
+            &Context);
+        assert(SUCCEEDED(Hr));
+
+#ifdef _DEBUG
+        //デバッグインターフェイス
+        Hr = Device->QueryInterface(
+            __uuidof(ID3D11Debug),
+            reinterpret_cast<void**>(&Debug));
+        assert(SUCCEEDED(Hr));
+#endif
+    }
+
+
+WinMain.cpp 解放*********************************************************
+    //解放
+    {
+        Context->Release();
+        Device->Release();
+#ifdef _DEBUG
+        Debug->Release();
+#endif
+    }
