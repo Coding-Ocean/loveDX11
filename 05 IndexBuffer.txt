@@ -1,0 +1,37 @@
+ヘッダー*************************************************************************
+リソースへ追加
+ID3D11Buffer* IndexBuffer;
+
+
+リソース*************************************************************************
+        //インデックスバッファ
+        {
+            //インデックスデータを用意
+            unsigned short indices[] = {
+                0,1,2,
+                2,1,3,
+            };
+            //バッファの記述
+            D3D11_BUFFER_DESC desc = {};
+            desc.ByteWidth = sizeof(unsigned short) * _countof(indices);
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.BindFlags = D3D11_BIND_INDEX_BUFFER;//インデックスバッファとしてGPUに紐づけ
+            desc.CPUAccessFlags = 0;
+            //データ
+            D3D11_SUBRESOURCE_DATA data = {};
+            data.pSysMem = indices;
+            //バッファをつくる
+            Hr = Device->CreateBuffer(&desc, &data, &IndexBuffer);
+            assert(SUCCEEDED(Hr));
+        }
+
+ループ中************************************************************************
+            //インデックスバッファをセット
+            Context->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+            
+            描画をこれに変更！
+            Context->DrawIndexed(6, 0, 0);
+
+解放****************************************************************************
+        IndexBuffer->Release();
+
