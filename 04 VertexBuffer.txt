@@ -1,0 +1,155 @@
+ヘッダ**************************************************************************
+#include<DirectXMath.h>
+using namespace DirectX;
+
+リソースのところに追加
+ID3D11Buffer*               PositionBuffer;
+//パイプライン-------------------------------------------------------------------
+ID3D11InputLayout*          InputLayout;
+ID3D11VertexShader*         VertexShader;
+ID3D11PixelShader*          PixelShader;
+ID3D11RasterizerState*      RasterizerState;
+D3D11_VIEWPORT              Viewport;
+
+//WinMain.hに追加してもいいが、別にヘッダを作った方がいい
+#include<fstream>
+//コンパイル済みシェーダを読み込むファイルバッファクラス
+class BIN_FILE11 {
+public:
+    BIN_FILE11(const char* fileName):Succeeded(false) {
+        std::ifstream ifs(fileName, std::ios::binary);
+        if (ifs.fail()) {
+            return;
+        }
+        Succeeded = true;
+        std::istreambuf_iterator<char> first(ifs);
+        std::istreambuf_iterator<char> last;
+        Buffer.assign(first, last);
+        ifs.close();
+    }
+    bool succeeded() const { return Succeeded; }
+    const char* code() const { return Buffer.data(); }
+    size_t size() const { return Buffer.size(); }
+private:
+    std::string Buffer;
+    bool Succeeded;
+};
+
+
+リソース************************************************************************
+バックバッファのあと
+        //頂点バッファ-positions
+        {
+            //３角形の頂点位置データを用意
+            XMFLOAT3 positions[] = {
+                { -0.5f, -0.5f, 0.0f },
+                { -0.5f,  0.5f, 0.0f },
+                {  0.5f, -0.5f, 0.0f },
+            };
+            //バッファ記述
+            D3D11_BUFFER_DESC desc = {};
+            desc.ByteWidth = sizeof(XMFLOAT3) * _countof(positions);//配列の全長
+            desc.Usage = D3D11_USAGE_DEFAULT;                 //デフォルトアクセス
+            desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;        //頂点バッファとしてGPUに紐づけ
+            desc.CPUAccessFlags = 0;                          //CPUのバッファへのアクセス拒否
+            //データ
+            D3D11_SUBRESOURCE_DATA data = {};
+            data.pSysMem = positions;
+            //バッファを作成
+            Hr = Device->CreateBuffer(&desc, &data, &PositionBuffer);
+            assert(SUCCEEDED(Hr));
+        }
+
+パイプライン*********************************************************************    
+    //パイプライン
+    {
+        //インプットレイアウト と シェーダー
+        {
+            //頂点インプットレイアウトを定義し、サイズを求めておく
+            UINT slot0 = 0;
+            D3D11_INPUT_ELEMENT_DESC Elements[]{
+                {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, slot0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+            };
+            UINT numElements = sizeof(Elements) / sizeof(Elements[0]);
+
+            //シェーダーバイトコードの読み込み
+            BIN_FILE11 vs("assets\\VertexShader.cso");
+            assert(vs.succeeded());
+            BIN_FILE11 ps("assets\\PixelShader.cso");
+            assert(ps.succeeded());
+
+            //頂点インプットレイアウトをつくる
+            Hr = Device->CreateInputLayout(Elements, numElements,
+                vs.code(), vs.size(), &InputLayout);
+            assert(SUCCEEDED(Hr));
+
+            //頂点シェーダをつくる
+            Hr = Device->CreateVertexShader(vs.code(), vs.size(), NULL, &VertexShader);
+            assert(SUCCEEDED(Hr));
+
+            //ピクセルシェーダーをつくる
+            Hr = Device->CreatePixelShader(ps.code(), ps.size(), NULL, &PixelShader);
+            assert(SUCCEEDED(Hr));
+        }
+        //ラスタライザーステート
+        {
+            D3D11_RASTERIZER_DESC desc;
+            desc.FrontCounterClockwise = FALSE;
+            desc.CullMode = D3D11_CULL_NONE;
+            //desc.CullMode = D3D11_CULL_BACK;
+            desc.DepthBias = 0;
+            desc.DepthBiasClamp = 0;
+            desc.SlopeScaledDepthBias = 0;
+            desc.DepthClipEnable = FALSE;
+            desc.ScissorEnable = FALSE;
+            desc.MultisampleEnable = FALSE;
+            desc.AntialiasedLineEnable = FALSE;
+            desc.FillMode = D3D11_FILL_SOLID;
+            //desc.FillMode = D3D11_FILL_WIREFRAME;
+            Device->CreateRasterizerState(&desc, &RasterizerState);
+        }
+        //表示領域を作成
+        {
+            Viewport.Width = static_cast<float>(ClientWidth);
+            Viewport.Height = static_cast<float>(ClientHeight);
+            Viewport.TopLeftX = 0;
+            Viewport.TopLeftY = 0;
+            Viewport.MinDepth = D3D11_MIN_DEPTH;// 0.0f
+            Viewport.MaxDepth = D3D11_MAX_DEPTH;// 1.0f
+        }
+    }
+
+メインループ*************************************************************************
+クリアのあと
+        //バックバッファへ描画
+        {
+            //頂点インプットレイアウトをセット
+            Context->IASetInputLayout(InputLayout);
+            //トポロジーをセット
+            Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            //頂点バッファをセット
+            ID3D11Buffer* buffers[] = { PositionBuffer };
+            UINT stride[] = { sizeof(XMFLOAT3) };
+            UINT offset[] = { 0 };
+            Context->IASetVertexBuffers(0, 1, buffers, stride, offset);
+
+            //頂点シェーダをセット
+            Context->VSSetShader(VertexShader, nullptr, 0);
+            //ラスタライザーをセット
+            Context->RSSetState(RasterizerState);
+            //ビューポートをセット
+            Context->RSSetViewports(1, &Viewport);
+            //ピクセルシェーダをセット
+            Context->PSSetShader(PixelShader, nullptr, 0);
+
+            //描画
+            Context->Draw(3, 0);
+        }
+
+解放****************************************************************************
+        RasterizerState->Release();
+        VertexShader->Release();
+        PixelShader->Release();
+        InputLayout->Release();
+
+        PositionBuffer->Release();
