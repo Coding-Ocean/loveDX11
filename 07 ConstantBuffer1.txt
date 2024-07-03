@@ -1,0 +1,10 @@
+XV‚ÍŠÖ”‰»‚µ‚½•û‚ª‚æ‚¢‚Å‚µ‚å‚¤
+void updateConstantBuffer(ID3D11Resource* buffer, void* data, size_t size) 
+{
+    D3D11_MAPPED_SUBRESOURCE mappedBuffer;
+    Hr = Context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+    assert(SUCCEEDED(Hr));
+    memcpy(mappedBuffer.pData, data, size);
+    Context->Unmap(buffer, 0);
+}
+

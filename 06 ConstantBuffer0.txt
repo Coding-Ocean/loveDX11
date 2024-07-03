@@ -1,0 +1,63 @@
+VertexShader.hlsl*********************************************************************
+cbuffer b0 : register(b0)
+{
+    matrix Mat;
+};
+
+return mul(Mat, pos);
+
+ヘッダ*********************************************************************************
+#include<DirectXMath.h>
+using namespace DirectX;
+リソースに追加
+ID3D11Buffer* ConstantBuffer0;
+
+リソース*******************************************************************************
+        //コンスタントバッファ０「マトリックス用」
+        {
+            D3D11_BUFFER_DESC desc = {};
+            desc.ByteWidth = sizeof(float) * 16;
+            desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;//定数バッファとして紐づけ
+            desc.Usage = D3D11_USAGE_DYNAMIC;//動的なバッファ
+            desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;//CPUから更新する
+            Hr = Device->CreateBuffer(&desc, nullptr, &ConstantBuffer0);
+            assert(SUCCEEDED(Hr));
+        }
+
+メインループ****************************************************************************
+            //コンスタントバッファ０
+            // マトリックスを用意
+            static float radian = 0.0f;
+            radian += 0.01f;
+            XMMATRIX world = XMMatrixRotationZ(radian) * XMMatrixTranslation(0, 0, 2.5f);
+            XMMATRIX proj = XMMatrixPerspectiveFovLH(3.14f / 4, ClientWidth / (float)ClientHeight, 1.0f, 20.f);
+            XMMATRIX mat = world * proj;
+            // バッファ更新
+            D3D11_MAPPED_SUBRESOURCE mappedBuffer;
+            Context->Map(ConstantBuffer0, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+            memcpy(mappedBuffer.pData, &mat, sizeof(mat));
+            Context->Unmap(ConstantBuffer0, 0);
+
+            //コンスタントバッファ０をセット
+            UINT b0 = 0;
+            Context->VSSetConstantBuffers(b0, 1, &ConstantBuffer0);
+
+解放***********************************************************************************
+        ConstantBuffer0->Release();
+
+
+
+
+
+
+
+更新は関数化した方がよいでしょう
+void updateConstantBuffer(ID3D11Resource* buffer, void* data, size_t size) 
+{
+    D3D11_MAPPED_SUBRESOURCE mappedBuffer;
+    Hr = Context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
+    assert(SUCCEEDED(Hr));
+    memcpy(mappedBuffer.pData, data, size);
+    Context->Unmap(buffer, 0);
+}
+
