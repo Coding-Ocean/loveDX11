@@ -7,10 +7,6 @@
     <ClInclude Include="WinMain.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="VertexShader.hlsl" />
-    <FxCompile Include="PixelShader.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="01 Window.txt" />
     <Text Include="02 Device.txt" />
     <Text Include="03 BackBuffer.txt" />
