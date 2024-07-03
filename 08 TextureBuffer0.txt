@@ -1,3 +1,45 @@
+VertexShader.hlsl*************************************************************
+cbuffer b0 : register(b0)
+{
+    matrix Mat;
+}
+
+struct VS_OUT
+{
+    float4 pos : SV_POSITION;
+    float2 uv : TEXCOORD;
+};
+
+VS_OUT main( float4 pos : POSITION, float2 uv : TEXCOORD ) 
+{
+    VS_OUT o;
+    o.pos = mul(Mat, pos);
+    o.uv = uv;
+    return o;
+}
+
+PixelShader.hlsl**************************************************************
+cbuffer b1 : register(b1)
+{
+    float4 Diffuse;
+}
+Texture2D Texture : register(t0);
+SamplerState Sampler : register(s0);
+
+struct PS_IN
+{
+    float4 pos : SV_POSITION;
+    float2 uv : TEXCOORD;
+};
+
+float4 main(PS_IN i) : SV_TARGET
+{
+    return  Texture.Sample(Sampler, i.uv) * Diffuse;
+    //return Diffuse;
+    //return float4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+
 =================================================================================================
 テクスチャ座標
 
@@ -88,7 +130,7 @@ ID3D11ShaderResourceView*   TextureBufferView0;
             data.pSysMem = (void*)pixels;
             data.SysMemPitch = texWidth * 4;
             data.SysMemSlicePitch = texWidth * texHeight * 4;
-            //バッファをつくる
+            //テクスチャバッファをつくる
             ID3D11Texture2D* textureBuffer = nullptr;
             Hr = Device->CreateTexture2D(&desc, &data, &textureBuffer);
             assert(SUCCEEDED(Hr));

@@ -1,0 +1,52 @@
+ヘッダ
+ID3D11ShaderResourceView*   TextureBufferView1;
+ 
+リソース
+        //テクスチャバッファ1
+        {
+            //テクスチャデータをファイルから読み込む
+            const char* filename = "assets\\penguin1.png";
+            unsigned char* pixels = nullptr;
+            int texWidth;
+            int texHeight;
+            int bytePerPixel;
+            pixels = stbi_load(filename, &texWidth, &texHeight, &bytePerPixel, 4);
+            assert(pixels!=nullptr);
+            
+            //テクスチャバッファ記述
+            D3D11_TEXTURE2D_DESC desc = {};
+            desc.Width = texWidth;
+            desc.Height = texHeight;
+            desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+            desc.Usage = D3D11_USAGE_IMMUTABLE;
+            desc.CPUAccessFlags = 0;
+            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.SampleDesc.Count = 1;
+            desc.SampleDesc.Quality = 0;
+            desc.MiscFlags = 0;
+            //テクスチャデータ
+            D3D11_SUBRESOURCE_DATA data = {};
+            data.pSysMem = (void*)pixels;
+            data.SysMemPitch = texWidth * bytePerPixel;
+            data.SysMemSlicePitch = texWidth * texHeight * bytePerPixel;
+            //テクスチャバッファをつくる
+            ID3D11Texture2D* textureBuffer = nullptr;
+            Hr = Device->CreateTexture2D(&desc, &data, &textureBuffer);
+            assert(SUCCEEDED(Hr));
+
+            //テクスチャバッファのビューをつくる
+            Hr = Device->CreateShaderResourceView(textureBuffer, nullptr, &TextureBufferView1);
+            assert(SUCCEEDED(Hr));
+
+            //解放
+            textureBuffer->Release();
+            stbi_image_free(pixels);
+        }
+
+メインループ                                                         ↓ここだけ変更
+            Context->PSSetShaderResources(t0, 1, &TextureBufferView1);
+
+解放
+        TextureBufferView1->Release();
