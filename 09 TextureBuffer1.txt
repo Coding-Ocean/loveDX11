@@ -1,8 +1,14 @@
+=====================================================================================
+画像ファイルを読み込んでテクスチャバッファビューをつくる
+
 ヘッダ
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 ID3D11ShaderResourceView*   TextureBufferView1;
  
 リソース
-        //テクスチャバッファ1
+        //テクスチャバッファビュー１をつくる
         {
             //テクスチャデータをファイルから読み込む
             const char* filename = "assets\\penguin1.png";
@@ -50,3 +56,39 @@ ID3D11ShaderResourceView*   TextureBufferView1;
 
 解放
         TextureBufferView1->Release();
+
+
+=====================================================================================
+アルファ値にしたがって、透明にする
+
+ヘッダ
+ID3D11BlendState* BlendState;
+
+パイプライン
+        //ブレンドステート
+        {
+            D3D11_BLEND_DESC desc = {};
+            desc.AlphaToCoverageEnable = FALSE;
+            desc.IndependentBlendEnable = FALSE;
+            for (int i = 0; i < 1; i++) {
+                desc.RenderTarget[i].BlendEnable = TRUE;
+                desc.RenderTarget[i].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+                desc.RenderTarget[i].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+                desc.RenderTarget[i].BlendOp = D3D11_BLEND_OP_ADD;
+                desc.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_ONE;
+                desc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_ZERO;
+                desc.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+                desc.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+            }
+            Hr = Device->CreateBlendState(&desc, &BlendState);
+        }
+
+
+メインループ。クリアのところに追加
+            //ブレンドステートをセット
+            float blendFactor[4] = { 0,0,0,0 };
+            Context->OMSetBlendState(BlendState, blendFactor, 0xffffffff);
+
+解放
+        BlendState->Release();
+

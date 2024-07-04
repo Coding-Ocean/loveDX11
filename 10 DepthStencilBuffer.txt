@@ -1,0 +1,72 @@
+====================================================================================
+でぷすすてんしるばっふぁ
+
+ヘッダ
+ID3D11DepthStencilView*     DepthStencilBufferView;
+
+リソース
+        //デプスステンシルバッファのビューをつくる
+        {
+            //デプスステンシルバッファの記述
+            D3D11_TEXTURE2D_DESC desc = {};
+            desc.Width = ClientWidth;
+            desc.Height = ClientHeight;
+            desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.CPUAccessFlags = 0;
+            desc.Format = DXGI_FORMAT_D32_FLOAT;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.SampleDesc.Count = 1;
+            desc.SampleDesc.Quality = 0;
+            desc.MiscFlags = 0;
+            //デプスステンシルバッファをつくる
+            ID3D11Texture2D* depthStencilBuffer = 0;
+            Hr = Device->CreateTexture2D(&desc, nullptr, &depthStencilBuffer);
+            assert(SUCCEEDED(Hr));
+
+            //デプスステンシルバッファのビューをつくる
+            D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+            dsvDesc.Format = desc.Format;
+            dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+            dsvDesc.Texture2D.MipSlice = 0;
+            Hr = Device->CreateDepthStencilView(depthStencilBuffer, &dsvDesc, &DepthStencilBufferView);
+            assert(SUCCEEDED(Hr));
+
+            depthStencilBuffer->Release();
+        }
+
+メインループ
+            //バックバッファとデプスステンシルバッファをレンダーターゲットに設定
+            Context->OMSetRenderTargets(1, &BackBufferView, DepthStencilBufferView);
+            //デプスステンシルバッファを1.0でクリア
+            Context->ClearDepthStencilView(DepthStencilBufferView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+解放
+        DepthStencilBufferView->Release();
+
+
+====================================================================================
+デプスステンシルステート
+
+ヘッダ
+ID3D11DepthStencilState*    DepthStencilState;
+
+リソース
+        //デプスステンシルステート
+        {
+            D3D11_DEPTH_STENCIL_DESC desc = {};
+            desc.DepthEnable = TRUE;
+            desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+            desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+            desc.StencilEnable = FALSE;
+            Hr = Device->CreateDepthStencilState(&desc, &DepthStencilState);
+            assert(SUCCEEDED(Hr));
+        }
+
+メインループ
+            //デプスステンシルステートをセット
+            Context->OMSetDepthStencilState(DepthStencilState, 0);
+
+解放
+        DepthStencilState->Release();

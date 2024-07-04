@@ -1,4 +1,7 @@
-VertexShader.hlsl*************************************************************
+====================================================================================
+シェーダ
+
+バーテックスシェーダ
 cbuffer b0 : register(b0)
 {
     matrix Mat;
@@ -18,7 +21,7 @@ VS_OUT main( float4 pos : POSITION, float2 uv : TEXCOORD )
     return o;
 }
 
-PixelShader.hlsl**************************************************************
+ピクセルシェーダ
 cbuffer b1 : register(b1)
 {
     float4 Diffuse;
@@ -34,7 +37,7 @@ struct PS_IN
 
 float4 main(PS_IN i) : SV_TARGET
 {
-    return  Texture.Sample(Sampler, i.uv) * Diffuse;
+    return  Texture.Sample(Sampler, i.uv);
     //return Diffuse;
     //return float4(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -91,15 +94,15 @@ ID3D11Buffer* TexcoordBuffer;
 
 ヘッダ
 ID3D11ShaderResourceView*   TextureBufferView0;
- 
+
 リソース
-        //テクスチャバッファ0
+        //テクスチャバッファビュー０をつくる
         {
             //テクスチャデータを自分でつくる
             UINT texWidth = 25;
             UINT texHeight = 25;
-            UINT c = texWidth / 2;
             struct pixel { unsigned char r, g, b, a; };
+            UINT bytePerPixel = sizeof(pixel);
             pixel* pixels = new pixel[texWidth * texHeight];
             for (UINT y = 0; y < texHeight; y++) {
                 for (UINT x = 0; x < texWidth; x++) {
@@ -116,19 +119,19 @@ ID3D11ShaderResourceView*   TextureBufferView0;
             D3D11_TEXTURE2D_DESC desc{};
             desc.Width = texWidth;
             desc.Height = texHeight;
+            desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+            desc.Usage = D3D11_USAGE_IMMUTABLE;
+            desc.CPUAccessFlags = 0;
+            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             desc.MipLevels = 1;
             desc.ArraySize = 1;
-            desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             desc.SampleDesc.Count = 1;
             desc.SampleDesc.Quality = 0;
-            desc.Usage = D3D11_USAGE_IMMUTABLE;
-            desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-            desc.CPUAccessFlags = 0;
             desc.MiscFlags = 0;
             //テクスチャデータ
             D3D11_SUBRESOURCE_DATA data{};
             data.pSysMem = (void*)pixels;
-            data.SysMemPitch = texWidth * 4;
+            data.SysMemPitch = texWidth * ;
             data.SysMemSlicePitch = texWidth * texHeight * 4;
             //テクスチャバッファをつくる
             ID3D11Texture2D* textureBuffer = nullptr;
@@ -144,6 +147,19 @@ ID3D11ShaderResourceView*   TextureBufferView0;
             delete[] pixels;
         }
 
+メインループ
+            //テクスチャセット
+            UINT t0 = 0; 
+            Context->PSSetShaderResources(t0, 1, &TextureBufferView0);
+
+解放
+        TextureBufferView0->Release();
+
+====================================================================================
+サンプラー
+
+ヘッダ
+ID3D11SamplerState* SamplerState;
 
 パイプライン
         //サンプラステート
@@ -160,12 +176,10 @@ ID3D11ShaderResourceView*   TextureBufferView0;
             Hr = Device->CreateSamplerState(&desc, &SamplerState);
         }
 
-
 メインループ
-            //テクスチャセット
-            UINT t0 = 0; 
-            Context->PSSetShaderResources(t0, 1, &TextureBufferView0);
+            //サンプラーをセット
+            UINT s0 = 0;
+            Context->PSSetSamplers(s0, 1, &SamplerState);
 
 解放
-        TextureBufferView0->Release();
-
+    SamplerState->Release();
