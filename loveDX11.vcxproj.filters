@@ -18,4 +18,7 @@
     <Text Include="09 TextureBuffer1.txt" />
     <Text Include="10 DepthStencilBuffer.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Pipeline.pdf" />
+  </ItemGroup>
 </Project>

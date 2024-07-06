@@ -1,0 +1,153 @@
+================================================================================================
+ランバートシェーダ
+
+VertexShader.hlsl＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+
+cbuffer b0 : register(b0)
+{
+    matrix World;
+    matrix WorldViewProj;
+}
+
+struct VS_OUT
+{
+    float4 pos : SV_POSITION;
+    float3 normal : NORMAL;
+    float2 uv : TEXCOORD;
+};
+
+VS_OUT main( float4 pos : POSITION, float3 normal : NORMAL, float2 uv : TEXCOORD ) 
+{
+    VS_OUT o;
+    o.pos = mul(WorldViewProj, pos);
+    o.normal = mul((float3x3)World, normal);//回転のみ行う
+    o.uv = uv;
+    return o;
+}
+
+PixelShader.hlsl＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+
+cbuffer b1 : register(b1)
+{
+    float4 Diffuse;
+    float3 LightDir;
+    float dummy;
+}
+Texture2D Texture : register(t0);
+SamplerState Sampler : register(s0);
+
+struct PS_IN
+{
+    float4 pos : SV_POSITION;
+    float3 normal : NORMAL;
+    float2 uv : TEXCOORD;
+};
+
+float4 main(PS_IN i) : SV_TARGET
+{
+    float brightness = max(dot(-LightDir, i.normal), 0.0f);
+    float4 col = Texture.Sample(Sampler, i.uv) * Diffuse;
+    return float4(col.rgb * brightness, col.a);
+    //return Diffuse;
+    //return float4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+================================================================================================
+頂点バッファ 法線ベクトルの追加
+
+ヘッダ
+ID3D11Buffer* NormalBuffer;
+
+リソース
+        //頂点バッファ-normals
+        {
+            //３角形の頂点位置データを用意
+            XMFLOAT3 normals[] = {
+                {0.0f,0.0f,-1.0f},
+                {0.0f,0.0f,-1.0f},
+                {0.0f,0.0f,-1.0f},
+                {0.0f,0.0f,-1.0f},
+            };
+            //頂点バッファの設定
+            D3D11_BUFFER_DESC desc = {};
+            desc.ByteWidth = sizeof(XMFLOAT3) * _countof(normals);//配列の全長
+            desc.Usage = D3D11_USAGE_DEFAULT;                 //デフォルトアクセス
+            desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;        //頂点バッファとしてGPUに紐づけ
+            desc.CPUAccessFlags = 0;                          //CPUのバッファへのアクセス拒否
+            //データの設定
+            D3D11_SUBRESOURCE_DATA data = {};
+            data.pSysMem = normals;
+            //頂点バッファを作成
+            Hr = Device->CreateBuffer(&desc, &data, &NormalBuffer);
+            assert(SUCCEEDED(Hr));
+        }
+
+パイプライン
+            //頂点インプットレイアウトを定義し、サイズを求めておく
+            UINT slot0 = 0, slot1 = 1, slot2 = 2;
+            D3D11_INPUT_ELEMENT_DESC Elements[]{
+                {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, slot0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, slot1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    slot2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            };
+            UINT numElements = _countof(Elements);
+
+            //頂点バッファをまとめてからセット
+            ID3D11Buffer* buffers[] = { PositionBuffer, NormalBuffer,TexcoordBuffer };
+            UINT stride[] = { sizeof(XMFLOAT3),sizeof(XMFLOAT3),sizeof(XMFLOAT2) };
+            UINT offset[] = { 0,0,0 };
+            Context->IASetVertexBuffers(0, 3, buffers, stride, offset);
+
+解放
+        NormalBuffer->Release();
+
+
+================================================================================================
+コンスタントバッファ
+
+構造体
+struct CONSTANT_BUFFER0 {
+    XMMATRIX world;
+    XMMATRIX worldViewProj;
+};
+struct CONSTANT_BUFFER1 {
+    XMFLOAT4 diffuse;
+    XMFLOAT3 lightDir;
+    float dummy;
+};
+
+リソース 
+            コンスタントバッファ０サイズ変更
+            desc.ByteWidth = sizeof(CONSTANT_BUFFER0);//サイズ
+            コンスタントバッファ１サイズ変更
+            desc.ByteWidth = sizeof(CONSTANT_BUFFER1);//サイズ
+
+メインループ
+            //正方形の描画
+            {
+                //コンスタントバッファ０更新 マトリックス
+                static float radian = 0.0f;
+                radian += 0.01f;
+                CONSTANT_BUFFER0 constantBuffer0;
+                //world matrix
+                constantBuffer0.world = XMMatrixRotationY(radian);
+                //world * view * proj matris
+                XMFLOAT3 eye(0, 0, -2), target(0, 0, 0), up(0, 1, 0);
+                XMMATRIX view = XMMatrixLookAtLH(
+                    XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
+                XMMATRIX proj = XMMatrixPerspectiveFovLH(3.14f / 4, 
+                    ClientWidth / (float)ClientHeight, 1.f, 20.f);
+                constantBuffer0.worldViewProj = constantBuffer0.world * view * proj;
+                updateConstantBuffer(ConstantBuffer0, &constantBuffer0, sizeof(constantBuffer0));
+                
+                //コンスタントバッファ１更新 ディフューズとライト方向
+                CONSTANT_BUFFER1 constantBuffer1;
+                constantBuffer1.diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+                constantBuffer1.lightDir = { 0.0f, 0.0f, 1.0f };
+                updateConstantBuffer(ConstantBuffer1, &constantBuffer1, sizeof(constantBuffer1));
+                //テクスチャセット
+                UINT t0 = 0;
+                Context->PSSetShaderResources(t0, 1, &TextureBufferView0);
+                //描画
+                Context->DrawIndexed(6, 0, 0);
+            }
