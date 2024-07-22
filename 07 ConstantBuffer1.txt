@@ -1,3 +1,41 @@
+ピクセルシェーダ***********************************************************************
+cbuffer b1 : register(b1)
+{
+    float4 Diffuse;
+};
+
+return Diffuse;
+
+ヘッダ********************************************************************************
+ID3D11Buffer* ConstantBuffer1;
+
+リソース******************************************************************************
+        //コンスタントバッファ１「ディフューズ用」
+        {
+            D3D11_BUFFER_DESC desc = {};
+            desc.ByteWidth = sizeof(float) * 4;
+            desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;//定数バッファとして紐づけ
+            desc.Usage = D3D11_USAGE_DYNAMIC;//動的なバッファ
+            desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;//CPUから更新する
+            Hr = Device->CreateBuffer(&desc, nullptr, &ConstantBuffer1);
+            assert(SUCCEEDED(Hr));
+        }
+
+メインループ***************************************************************************
+            //コンスタントバッファ１をセット
+            UINT b1 = 1;
+            Context->PSSetConstantBuffers(b1, 1, &ConstantBuffer1);
+
+            //コンスタントバッファ１を更新
+            XMFLOAT4 diffuse = {1.0f,1.0f,0.0f,1.0f};
+            updateConstantBuffer(ConstantBuffer1, &diffuse, sizeof(diffuse));
+
+
+解放*********************************************************************************
+        ConstantBuffer1->Release();
+
+
+
 更新は関数化した方がよいでしょう
 void updateConstantBuffer(ID3D11Resource* buffer, void* data, size_t size) 
 {

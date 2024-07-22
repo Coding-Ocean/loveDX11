@@ -1,7 +1,4 @@
-====================================================================================
-シェーダ
-
-バーテックスシェーダ
+バーテックスシェーダ====================================================================
 cbuffer b0 : register(b0)
 {
     matrix Mat;
@@ -21,30 +18,8 @@ VS_OUT main( float4 pos : POSITION, float2 uv : TEXCOORD )
     return o;
 }
 
-ピクセルシェーダ
-cbuffer b1 : register(b1)
-{
-    float4 Diffuse;
-}
-Texture2D Texture : register(t0);
-SamplerState Sampler : register(s0);
-
-struct PS_IN
-{
-    float4 pos : SV_POSITION;
-    float2 uv : TEXCOORD;
-};
-
-float4 main(PS_IN i) : SV_TARGET
-{
-    return  Texture.Sample(Sampler, i.uv);
-    //return Diffuse;
-    //return float4(1.0f, 1.0f, 1.0f, 1.0f);
-}
-
-
 =================================================================================================
-テクスチャ座標
+頂点バッファのテクスチャ座標
 
 ヘッダ
 ID3D11Buffer* TexcoordBuffer;
@@ -55,8 +30,8 @@ ID3D11Buffer* TexcoordBuffer;
             //４角形の頂点テクスチャ座標データを用意
             XMFLOAT2 texcoords[] = {
                 { 0.0f, 1.0f },
-                { 1.0f, 1.0f },
                 { 0.0f, 0.0f },
+                { 1.0f, 1.0f },
                 { 1.0f, 0.0f },
             };
             //バッファ記述
@@ -89,6 +64,28 @@ ID3D11Buffer* TexcoordBuffer;
 解放
         TexcoordBuffer->Release();
 
+
+ピクセルシェーダ=======================================================================
+cbuffer b1 : register(b1)
+{
+    float4 Diffuse;
+}
+Texture2D Texture : register(t0);
+SamplerState Sampler : register(s0);
+
+struct PS_IN
+{
+    float4 pos : SV_POSITION;
+    float2 uv : TEXCOORD;
+};
+
+float4 main(PS_IN i) : SV_TARGET
+{
+    return  Texture.Sample(Sampler, i.uv);
+    //return Diffuse;
+    //return float4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
 =================================================================================================
 テクスチャバッファ
 
@@ -107,10 +104,10 @@ ID3D11ShaderResourceView*   TextureBufferView0;
             for (UINT y = 0; y < texHeight; y++) {
                 for (UINT x = 0; x < texWidth; x++) {
                     if ( (x + y) % 2 ) {
-                        pixels[x + y * texWidth] = {255,255,0,255};
+                        pixels[x + y * texWidth] = {255,255,255,255};
                     }
                     else {
-                        pixels[x + y * texWidth] = {0,128,255,255};
+                        pixels[x + y * texWidth] = {0,0,0,255};
                     }
                 }
             }
@@ -131,7 +128,7 @@ ID3D11ShaderResourceView*   TextureBufferView0;
             //テクスチャデータ
             D3D11_SUBRESOURCE_DATA data{};
             data.pSysMem = (void*)pixels;
-            data.SysMemPitch = texWidth * ;
+            data.SysMemPitch = texWidth * 4;
             data.SysMemSlicePitch = texWidth * texHeight * 4;
             //テクスチャバッファをつくる
             ID3D11Texture2D* textureBuffer = nullptr;
