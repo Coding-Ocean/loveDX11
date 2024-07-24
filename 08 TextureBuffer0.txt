@@ -128,8 +128,8 @@ ID3D11ShaderResourceView*   TextureBufferView0;
             //テクスチャデータ
             D3D11_SUBRESOURCE_DATA data{};
             data.pSysMem = (void*)pixels;
-            data.SysMemPitch = texWidth * 4;
-            data.SysMemSlicePitch = texWidth * texHeight * 4;
+            data.SysMemPitch = texWidth * bytePerPixel;
+            data.SysMemSlicePitch = texWidth * texHeight * bytePerPixel;
             //テクスチャバッファをつくる
             ID3D11Texture2D* textureBuffer = nullptr;
             Hr = Device->CreateTexture2D(&desc, &data, &textureBuffer);
