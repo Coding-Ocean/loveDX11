@@ -36,7 +36,7 @@ ID3D11Buffer* TexcoordBuffer;
             };
             //バッファ記述
             D3D11_BUFFER_DESC desc{};
-            desc.ByteWidth = sizeof(XMFLOAT2) * _countof(texcoords);//配列の全長
+            desc.ByteWidth = sizeof(texcoords);//配列の全長
             desc.Usage = D3D11_USAGE_DEFAULT;            //デフォルトアクセス
             desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;   //頂点バッファとしてGPUに紐づけ
             desc.CPUAccessFlags = 0;                     //CPUのバッファへのアクセス拒否
@@ -57,8 +57,8 @@ ID3D11Buffer* TexcoordBuffer;
 メインループ
             //頂点バッファをまとめてからセット
             ID3D11Buffer* buffers[] = { PositionBuffer, TexcoordBuffer };
-            UINT stride[2] = { sizeof(XMFLOAT3),sizeof(XMFLOAT2) };
-            UINT offset[2] = { 0,0 };
+            UINT stride[2] = { sizeof(XMFLOAT3), sizeof(XMFLOAT2) };
+            UINT offset[2] = { 0, 0 };
             Context->IASetVertexBuffers(0, 2, buffers, stride, offset);
 
 解放

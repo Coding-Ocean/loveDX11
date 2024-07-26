@@ -17,7 +17,7 @@ ID3D11Buffer* IndexBuffer;
             };
             //バッファの記述
             D3D11_BUFFER_DESC desc = {};
-            desc.ByteWidth = sizeof(unsigned short) * _countof(indices);
+            desc.ByteWidth = sizeof(indices);
             desc.Usage = D3D11_USAGE_DEFAULT;
             desc.BindFlags = D3D11_BIND_INDEX_BUFFER;//インデックスバッファとしてGPUに紐づけ
             desc.CPUAccessFlags = 0;
