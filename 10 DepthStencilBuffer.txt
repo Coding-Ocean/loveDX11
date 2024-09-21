@@ -43,6 +43,7 @@ ID3D11DepthStencilView*     DepthStencilBufferView;
 メインループ
             //バックバッファとデプスステンシルバッファをレンダーターゲットに設定
             Context->OMSetRenderTargets(1, &BackBufferView, DepthStencilBufferView);
+
             //デプスステンシルバッファを1.0でクリア
             Context->ClearDepthStencilView(DepthStencilBufferView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -56,7 +57,7 @@ ID3D11DepthStencilView*     DepthStencilBufferView;
 ヘッダ
 ID3D11DepthStencilState*    DepthStencilState;
 
-リソース
+パイプライン
         //デプスステンシルステート
         {
             D3D11_DEPTH_STENCIL_DESC desc = {};

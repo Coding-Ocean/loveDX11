@@ -36,6 +36,7 @@ HRESULT Hr;
 //リソース-------------------------------------------------------------------
 IDXGISwapChain1* SwapChain;
 ID3D11RenderTargetView* BackBufferView;
+ID3D11DepthStencilView* DepthStencilBufferView;
 ID3D11Buffer* PositionBuffer;
 ID3D11Buffer* IndexBuffer;
 ID3D11Buffer* ConstantBuffer0;
@@ -51,6 +52,7 @@ ID3D11RasterizerState* RasterizerState;
 D3D11_VIEWPORT Viewport;
 ID3D11SamplerState* SamplerState;
 ID3D11BlendState* BlendState;
+ID3D11DepthStencilState* DepthStencilState;
 
 //WinMain.hに追加してもいいが、別にヘッダを作った方がいい
 #include<fstream>

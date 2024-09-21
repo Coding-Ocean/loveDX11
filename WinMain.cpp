@@ -116,6 +116,36 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
             //もういらない
             backBuffer->Release();
         }
+        //デプスステンシルバッファのビューをつくる
+        {
+            //デプスステンシルバッファの記述
+            D3D11_TEXTURE2D_DESC desc = {};
+            desc.Width = ClientWidth;
+            desc.Height = ClientHeight;
+            desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.CPUAccessFlags = 0;
+            desc.Format = DXGI_FORMAT_D32_FLOAT;
+            desc.MipLevels = 1;
+            desc.ArraySize = 1;
+            desc.SampleDesc.Count = 1;
+            desc.SampleDesc.Quality = 0;
+            desc.MiscFlags = 0;
+            //デプスステンシルバッファをつくる
+            ID3D11Texture2D* depthStencilBuffer = 0;
+            Hr = Device->CreateTexture2D(&desc, nullptr, &depthStencilBuffer);
+            assert(SUCCEEDED(Hr));
+
+            //デプスステンシルバッファのビューをつくる
+            D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+            dsvDesc.Format = desc.Format;
+            dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+            dsvDesc.Texture2D.MipSlice = 0;
+            Hr = Device->CreateDepthStencilView(depthStencilBuffer, &dsvDesc, &DepthStencilBufferView);
+            assert(SUCCEEDED(Hr));
+
+            depthStencilBuffer->Release();
+        }
         //頂点バッファ-positions
         {
             //３角形の頂点位置データを用意
@@ -382,6 +412,16 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
             }
             Hr = Device->CreateBlendState(&desc, &BlendState);
         }
+        //デプスステンシルステート
+        {
+            D3D11_DEPTH_STENCIL_DESC desc = {};
+            desc.DepthEnable = TRUE;
+            desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+            desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+            desc.StencilEnable = FALSE;
+            Hr = Device->CreateDepthStencilState(&desc, &DepthStencilState);
+            assert(SUCCEEDED(Hr));
+        }
     }
     //メインループ
     while (true)
@@ -397,17 +437,22 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
         }
         //バックバッファのクリア
         {
+            //ブレンドステートをセット
             float blendFactor[4] = { 0,0,0,0 };
             Context->OMSetBlendState(BlendState, blendFactor, 0xffffffff);
+            //デプスステンシルステートをセット
+            Context->OMSetDepthStencilState(DepthStencilState, 0);
 
-            //バックバッファをレンダーターゲットに設定
-            Context->OMSetRenderTargets(1, &BackBufferView, nullptr);
+            //バックバッファとデプスステンシルバッファをレンダーターゲットに設定
+            Context->OMSetRenderTargets(1, &BackBufferView, DepthStencilBufferView);
             //レンダーターゲットビューを指定した色でクリア
             static float radian = 0.0f;
             float r = cos(radian) * 0.5f + 0.5f;
             radian += 0.01f;
             FLOAT clearColor[4] = { r, 0.25f, 0.5f, 1.0f };
             Context->ClearRenderTargetView(BackBufferView, clearColor);
+            //デプスステンシルバッファを1.0でクリア
+            Context->ClearDepthStencilView(DepthStencilBufferView, D3D11_CLEAR_DEPTH, 1.0f, 0);
         }
         //バックバッファへ描画
         {
@@ -488,10 +533,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
         {
             SwapChain->Present(1, 0);
         }
-    }
+    }{}
 
     //解放
     {
+        DepthStencilState->Release();
         BlendState->Release();
         SamplerState->Release();
         RasterizerState->Release();
@@ -506,6 +552,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
         IndexBuffer->Release();
         TexcoordBuffer->Release();
         PositionBuffer->Release();
+        DepthStencilBufferView->Release();
         BackBufferView->Release();
         SwapChain->Release();
 
