@@ -18,8 +18,8 @@ ID3D11ShaderResourceView*   TextureBufferView1;
             unsigned char* pixels = nullptr;
             int texWidth;
             int texHeight;
-            int bytePerPixel;
-            pixels = stbi_load(filename, &texWidth, &texHeight, &bytePerPixel, 4);
+            int bytePerPixel = 4;
+            pixels = stbi_load(filename, &texWidth, &texHeight, nullptr, bytePerPixel);
             assert(pixels!=nullptr);
             
             //テクスチャバッファ記述
