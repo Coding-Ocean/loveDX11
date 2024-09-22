@@ -244,7 +244,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
                         pixels[x + y * texWidth] = { 255,255,255,255 };
                     }
                     else {
-                        pixels[x + y * texWidth] = { 0,0,0,255 };
+                        pixels[x + y * texWidth] = { 0,0,0,0 };
                     }
                 }
             }
@@ -287,8 +287,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
             unsigned char* pixels = nullptr;
             int texWidth;
             int texHeight;
-            int bytePerPixel;
-            pixels = stbi_load(filename, &texWidth, &texHeight, &bytePerPixel, 4);
+            int bytePerPixel = 4;
+            pixels = stbi_load(filename, &texWidth, &texHeight, nullptr, bytePerPixel);
             assert(pixels != nullptr);
 
             //テクスチャバッファ記述
@@ -363,7 +363,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
             desc.DepthBias = 0;
             desc.DepthBiasClamp = 0;
             desc.SlopeScaledDepthBias = 0;
-            desc.DepthClipEnable = FALSE;
+            desc.DepthClipEnable = TRUE;
             desc.ScissorEnable = FALSE;
             desc.MultisampleEnable = FALSE;
             desc.AntialiasedLineEnable = FALSE;
@@ -396,7 +396,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
         //ブレンドステート
         {
             D3D11_BLEND_DESC desc = {};
-            desc.AlphaToCoverageEnable = FALSE;
+            desc.AlphaToCoverageEnable = TRUE;
             desc.IndependentBlendEnable = FALSE;
             for (int i = 0; i < 1; i++) {
                 desc.RenderTarget[i].BlendEnable = TRUE;
@@ -408,6 +408,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
                 desc.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_ONE;
                 desc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_ZERO;
                 desc.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
                 desc.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
             }
             Hr = Device->CreateBlendState(&desc, &BlendState);
@@ -460,16 +461,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
             Context->IASetInputLayout(InputLayout);
             //トポロジーをセット
             Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            //頂点バッファをセット
             //頂点バッファをまとめてからセット
             ID3D11Buffer* buffers[] = { PositionBuffer, TexcoordBuffer };
-            UINT stride[2] = { sizeof(XMFLOAT3), sizeof(XMFLOAT2) };
-            UINT offset[2] = { 0, 0 };
-            Context->IASetVertexBuffers(0, 2, buffers, stride, offset);
-            //ID3D11Buffer* buffers[] = { PositionBuffer };
-            //UINT stride[] = { sizeof(XMFLOAT3) };
-            //UINT offset[] = { 0 };
-            //Context->IASetVertexBuffers(0, 1, buffers, stride, offset);
+            UINT stride[] = { sizeof(XMFLOAT3), sizeof(XMFLOAT2) };
+            UINT offset[] = { 0, 0 };
+            Context->IASetVertexBuffers(0, _countof(buffers), buffers, stride, offset);
             //インデックスバッファをセット
             Context->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 
@@ -497,7 +493,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
             radian += 0.01f;
             XMVECTOR eye = { 0,0,-3.0f }, focus = { 0, 0, 0 }, up = { 0, 1, 0 };
             XMMATRIX view = XMMatrixLookAtLH(eye, focus, up);
-            XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV4, (float)ClientWidth / ClientHeight, 1.0f, 20.f);
+            XMMATRIX proj = XMMatrixPerspectiveFovLH(
+                XM_PIDIV4, (float)ClientWidth / ClientHeight, 1.0f, 20.0f);
             //壁
             {
                 //コンスタントバッファ０を更新
@@ -520,7 +517,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
                 XMMATRIX mat = world * view * proj;
                 updateConstantBuffer(ConstantBuffer0, &mat, sizeof(mat));
                 //コンスタントバッファ１を更新
-                XMFLOAT4 diffuse = { 1.0f,1.0f,1.0f,1.0f };
+                XMFLOAT4 diffuse = { 1.0f,1.0f,1.0f,0.8f };
                 updateConstantBuffer(ConstantBuffer1, &diffuse, sizeof(diffuse));
                 //テクスチャセット
                 UINT t0 = 0;
@@ -534,7 +531,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
             SwapChain->Present(1, 0);
         }
     }{}
-
     //解放
     {
         DepthStencilState->Release();

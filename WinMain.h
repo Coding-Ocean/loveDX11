@@ -7,9 +7,9 @@
 #include<cassert>
 #include<windows.h>
 #include<DirectXMath.h>
+using namespace DirectX;
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-using namespace DirectX;
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 void updateConstantBuffer(ID3D11Resource* buffer, void* data, size_t size);
 
@@ -28,22 +28,25 @@ DWORD WindowStyle = WS_OVERLAPPEDWINDOW;//ウィンドウ枠あり
 DWORD WindowStyle = WS_POPUP;//Alt + F4で閉じる
 #endif
 HWND HWnd;//ウィンドウハンドル
+
 //デバイス、コンテキスト-------------------------------------------------------
 ID3D11Device* Device;//バッファやバッファビュー、パイプラインステートをつくる関数をもつ
 ID3D11DeviceContext* Context;//バッファビューやパイプラインステートをパイプラインにセットする関数をもつ
 ID3D11Debug* Debug;
 HRESULT Hr;
+
 //リソース-------------------------------------------------------------------
 IDXGISwapChain1* SwapChain;
 ID3D11RenderTargetView* BackBufferView;
 ID3D11DepthStencilView* DepthStencilBufferView;
 ID3D11Buffer* PositionBuffer;
+ID3D11Buffer* TexcoordBuffer;
 ID3D11Buffer* IndexBuffer;
 ID3D11Buffer* ConstantBuffer0;
 ID3D11Buffer* ConstantBuffer1;
-ID3D11Buffer* TexcoordBuffer;
 ID3D11ShaderResourceView* TextureBufferView0;
 ID3D11ShaderResourceView* TextureBufferView1;
+
 //パイプライン-------------------------------------------------------------------
 ID3D11InputLayout* InputLayout;
 ID3D11VertexShader* VertexShader;
