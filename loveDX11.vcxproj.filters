@@ -5,20 +5,59 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WinMain.h" />
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="01 Window.txt" />
-    <Text Include="02 Device.txt" />
-    <Text Include="03 BackBuffer.txt" />
-    <Text Include="04 VertexBuffer.txt" />
-    <Text Include="05 IndexBuffer.txt" />
-    <Text Include="06 ConstantBuffer0.txt" />
-    <Text Include="07 ConstantBuffer1.txt" />
-    <Text Include="08 TextureBuffer0.txt" />
-    <Text Include="09 TextureBuffer1.txt" />
-    <Text Include="10 DepthStencilBuffer.txt" />
+    <Text Include="01 Window.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="02 Device.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="03 BackBuffer.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="04 VertexBuffer.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="05 IndexBuffer.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="06 ConstantBuffer0.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="07 ConstantBuffer1.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="08 TextureBuffer0.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="09 TextureBuffer1.txt">
+      <Filter>copy src text</Filter>
+    </Text>
+    <Text Include="10 DepthStencilBuffer.txt">
+      <Filter>copy src text</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Pipeline.pdf" />
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShader.hlsl">
+      <Filter>hlsl</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="copy src text">
+      <UniqueIdentifier>{a027139f-1b8b-45c5-80bb-534e84b83236}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hlsl">
+      <UniqueIdentifier>{4db0e74c-7ffa-4789-9fef-636692fdbc76}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Pipeline.pdf">
+      <Filter>copy src text</Filter>
+    </None>
   </ItemGroup>
 </Project>
