@@ -148,7 +148,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ PWSTR, _I
         }
 
         //データファイルを開く
-        std::ifstream file("assets\\kame\\kame.txt");
+        std::ifstream file("assets\\plane\\plane.txt");
         assert(!file.fail());
 
         //頂点バッファ-positions
